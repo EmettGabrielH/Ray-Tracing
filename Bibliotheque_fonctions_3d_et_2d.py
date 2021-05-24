@@ -17,22 +17,22 @@ class Vecteur:
     def rgb(self):
         return (min(self.x,255), min(self.y,255),min(self.z,255))
     def __add__(self, vecteur2):
-        if type(vecteur2) == int or type(vecteur2) == float:
+        if type(vecteur2) != Vecteur:
             return Vecteur(self.x + vecteur2, self.y + vecteur2, self.z + vecteur2)
         return Vecteur(self.x + vecteur2.x, self.y + vecteur2.y, self.z + vecteur2.z)
     def __iadd__(self, vecteur2):
         self = self + vecteur2
         return self
     def __truediv__(self, vecteur2):
-        if type(vecteur2) == int or type(vecteur2) == float:
+        if type(vecteur2) != Vecteur:
             return Vecteur(self.x / vecteur2, self.y / vecteur2, self.z / vecteur2)
         return Vecteur(self.x / vecteur2.x, self.y / vecteur2.y, self.z / vecteur2.z)
     def __mul__(self, vecteur2):
-        if type(vecteur2) == int or type(vecteur2) == float:
+        if type(vecteur2) != Vecteur:
             return Vecteur(self.x * vecteur2, self.y * vecteur2, self.z * vecteur2)
         return Vecteur(self.x * vecteur2.x, self.y * vecteur2.y, self.z * vecteur2.z)
     def __sub__ (self, vecteur2):
-        if type(vecteur2) == int or type(vecteur2) == float:
+        if type(vecteur2) != Vecteur:
             return Vecteur(self.x - vecteur2, self.y - vecteur2, self.z - vecteur2)
         return Vecteur(self.x - vecteur2.x, self.y - vecteur2.y, self.z - vecteur2.z)
     def norme(self):
@@ -51,7 +51,6 @@ class Sphere:
         self.col = couleur
         self.reflexion = reflexion
         self.transparence = transparence
-        self.type = "Sphere"
     def intersection_droite(self,rayon):
         # droite d , passant par A de vecteur directeur u, vecteur unitaire
         SA = rayon.ori - self.pos
@@ -62,8 +61,7 @@ class Sphere:
             return -b/2
         elif delta > 0:
             sqrt_delta = sqrt(delta)
-            x = min((-b - sqrt_delta) /2,  (-b + sqrt_delta) /2 )
-            return x
+            return min((-b - sqrt_delta) /2,  (-b + sqrt_delta) /2 )
         else:
             return -1
 class Plan:
@@ -77,13 +75,11 @@ class Plan:
         self.transparence = transparence
         self.norm = self.normal()
         self.equa = self.equation()
-        self.type = "Plan"
     def normal(self):
         return vectoriel(self.pos1-self.pos2,self.pos3-self.pos2).unitaire()
     def equation(self):
-        norm = self.normal()
-        d = -scalaire(norm,self.pos1)
-        return (norm.x,norm.y,norm.z,d)
+        d = -scalaire(self.norm,self.pos1)
+        return (self.norm.x,self.norm.y,self.norm.z,d)
     def intersection_droite(self,rayon):
         a,b,c,d = self.equa
         A = a*rayon.vect.x + b* rayon.vect.y + c*rayon.vect.z
@@ -99,22 +95,19 @@ class Triangle:
         self.reflexion = reflexion
         self.transparence = transparence
         self.col = couleur
-        self.type = "Triangle"
         self.norm = self.normal()
+        self.equa = self.equation()
     def normal(self):
         return vectoriel(self.pos1-self.pos2,self.pos3-self.pos2).unitaire()
     def equation(self):
-        norm = self.normal()
-        d = -scalaire(norm,self.pos1)
-        return (norm.x,norm.y,norm.z,d)
+        d = -scalaire(self.norm,self.pos1)
+        return (self.norm.x,self.norm.y,self.norm.z,d)
     def intersection_droite(self, rayon):
-        scal = scalaire(rayon.vect,self.norm)
-        if scal == 0:
-            return -1
-        else:
-            d_triangle = -scalaire(self.norm,rayon.ori + (self.norm * scalaire(self.norm,self.pos1)).negatif()) / scal
+        a,b,c,d = self.equa
+        A = a*rayon.vect.x + b* rayon.vect.y + c*rayon.vect.z
+        if A != 0:
+            d_triangle = -(a*rayon.ori.x +b*rayon.ori.y+ c*rayon.ori.z +d)/ A
             q = rayon.vect * d_triangle + rayon.ori
-
             A = scalaire(vectoriel(self.pos3 - self.pos1,q - self.pos1), self.norm)
             B = scalaire(vectoriel(self.pos2 - self.pos3,q - self.pos3), self.norm)
             C = scalaire(vectoriel(self.pos1 - self.pos2,q - self.pos2), self.norm)
@@ -122,6 +115,7 @@ class Triangle:
                 return d_triangle
             else:
                 return -1
+        return -1
 class Lampe:
     def __init__(self,couleur, position,alpha):
         self.pos = position
