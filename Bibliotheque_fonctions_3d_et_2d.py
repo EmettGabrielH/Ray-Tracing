@@ -119,7 +119,7 @@ class Triangle:
             B = scalaire(vectoriel(self.pos2 - self.pos3,q - self.pos3), self.norm)
             C = scalaire(vectoriel(self.pos1 - self.pos2,q - self.pos2), self.norm)
             if A>=0 and B>=0 and C>=0:
-                return dist_to_triangle
+                return d_triangle
             else:
                 return -1
 class Lampe:
