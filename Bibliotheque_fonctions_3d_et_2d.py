@@ -42,7 +42,7 @@ class Vecteur:
         if n!= 0:
             return Vecteur(self.x/n, self.y / n, self.z / n)
         return Vecteur(0, 0, 0)
-    def negatif(self):
+    def inverse(self):
         return self * (-1)
 class Sphere:
     def __init__(self,couleur, position, rayon,reflexion,transparence):
@@ -121,7 +121,6 @@ class Lampe:
         self.pos = position
         self.col = couleur
         self.alpha = alpha # entre 10 et 100
-        self.type = "Lampe"
         
 class World:
     def __init__(self, liste_objets, liste_lampes):
