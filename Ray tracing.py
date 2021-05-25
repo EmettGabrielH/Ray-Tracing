@@ -7,8 +7,7 @@ from Bibliotheque_fonctions_graphiques import *
 def speculaire(u,n,l,lampe):
     if scalaire(l,n) > 0:
         return lampe.col * scalaire(l,((u-2)*scalaire(n,u) * n).unitaire())**lampe.alpha
-    else:
-        return Vecteur(0,0,0)
+    return Vecteur(0,0,0)
 def coloration (rayon,world,camera):
     # Avec reflet
     # Donne la couleur d'un pixel
@@ -24,7 +23,7 @@ def coloration (rayon,world,camera):
                     distance_min = d_M
                     M =  (rayon.vect*d_M) + rayon.ori
                     
-                    if objet.type == "Sphere":
+                    if type(objet) == Sphere:
                         reflected_ray =  rayon.reflexion((M - objet.pos).unitaire())
                     else:
                         reflected_ray =  rayon.reflexion(objet.norm)
@@ -36,14 +35,14 @@ def coloration (rayon,world,camera):
         if objet_rebond != camera:
             indice_objet = indice_reflexion*(1-objet_rebond.reflexion)
             
-            if objet_rebond.type == "Sphere":
+            if type(objet_rebond) == Sphere:
                 n = (M - objet_rebond.pos).unitaire()
             else:
                 n =  objet_rebond.norm
             
             scal,spec = 0, Vecteur(0,0,0)
             for lampe in world.lamp:
-                l = (lampe.pos - objet_rebond.pos).unitaire()
+                l = (lampe.pos - M).unitaire()
                 spec += speculaire(rayon.vect,n,l,lampe)
                 scal = max(scalaire(n,l),scal)
                 
@@ -52,7 +51,7 @@ def coloration (rayon,world,camera):
             indice_reflexion *= objet_rebond.reflexion
             
         if nb_rebond+1 == camera.rebond or objet_rebond == camera:
-            if nb_rebond == 0:
+            if objet_rebond == camera:
                 return None
             return couleur.rgb()
         
@@ -60,7 +59,7 @@ def coloration (rayon,world,camera):
         rayon.ori = M
         
 def coloration2 (rayon,world,camera):
-    # Sans refexion
+    # Sans refexion, une seul lampe
     # Donne la couleur d'un pixel
     distance_min = inf
     couleur = None
@@ -71,7 +70,7 @@ def coloration2 (rayon,world,camera):
             OM =  rayon.vect*d_M + rayon.ori
             lampe = world.lamp[0]
             l = (lampe.pos - OM).unitaire()
-            if objet.type == "Sphere":
+            if type(objet) == Sphere:
                 n = (OM - objet.pos).unitaire()
             else:
                 n = objet.norm
@@ -86,16 +85,15 @@ def Ray_tracing(world, image, camera):
     m_l, m_h = image.l/2, image.h/2
     for x in range(image.l):
         for y in range(image.h):
-            u = (Vecteur(x - m_l,y - m_h, camera.D)).unitaire()
-            rayon = Rayon(camera.pos, u)
-            #rayon.vect = (rayon.rotation(camera.rot)).unitaire()
+            rayon = Rayon(camera.pos, (Vecteur(x - m_l,y - m_h, camera.D)).unitaire())
+            rayon.vect = (rayon.rotation(camera.rot)).unitaire()
             couleur = coloration(rayon,world,camera)
             if couleur != None:
                 rendu[x,y] = couleur
                 
     stdout.write("Generation rendu: %d s\n" %(time()-debut))
     enregistrer_image(image.nom,rendu)
-    afficher_image(rendu)
+    #afficher_image(rendu)
     stdout.write("Enregistrement rendu: %d s\n" %(time()-debut))
     
 def generateur_world(n,nombre_lampes,nombre_triangles,nombre_spheres, nombre_plans):
@@ -120,34 +118,25 @@ def main():
     # Prend environ 100s
     global debut
     debut = time()
-    n_w = 11
+    n_w = 13
     n = 1
     
-    generateur_world(n_w,3,0,10,1)
+    generateur_world(n_w,3,0,0,4)
     world = lire_fichier("world n°%d" %n_w)
-    world.lamp[0] = Lampe( Vecteur(255,255,255), Vecteur(0,0,0), 100)
-    image = Image_(1000,1000,"Rendu %d" %n)
-    camera = Camera(Vecteur(0,0,-10),Vecteur(0,0,0),50,400,5)
+    image = Image_(300,300,"Rendu %d" %n)
+    camera = Camera(Vecteur(0,0,-10),Vecteur(0,0,0),50,400,3)
     
     stdout.write("Generation scene: %d s\n" %(time()-debut))
     Ray_tracing(world, image, camera)
     
     """
     liste_images = []
-    for n in range(1,100):
+    for n in range(24,100):
         liste_images.append("Rendu %d.png" %n)
         image = Image_(300,300,"Rendus video\Rendu %d" %n)
         world = lire_fichier("world n°%d" %n_w)
         camera = Camera(Vecteur(0,n/40,-10),Vecteur(n/40,n/40,n/40),50,400,3)
-        print(time()-debut)
-
         Ray_tracing(world, image, camera)
     creation_video ("Video 2", liste_images,15)
-    """
+    #"""
 main()
-
-
-
-
-
-                  
